@@ -1,23 +1,14 @@
-import { Machine, EventObject, assign, DoneInvokeEvent } from 'xstate';
+import { Machine, assign } from 'xstate';
 import { Subreddit } from './subreddit';
-
-export enum SubredditEventType {
-  Request = 'Request',
-  Success = 'Success',
-  Error = 'Error'
-}
-
-export interface SubredditEvent extends EventObject, DoneInvokeEvent<Subreddit> {
-  type: SubredditEventType,
-}
+import { SubredditEvent, SubredditEventType } from './events';
 
 export enum SubredditStateType {
-  Ready = 'Ready',
+  Waiting = 'Waiting',
   Loading = 'Loading',
-  Done = 'Done'
+  Done = 'Done',
 }
 
-interface SubredditContext {
+export interface SubredditContext {
   subreddit?: Subreddit;
 }
 
@@ -30,12 +21,12 @@ interface SubredditState {
 export default Machine<SubredditContext, SubredditState, SubredditEvent>(
   {
     id: 'subreddit',
-    initial: SubredditStateType.Ready,
+    initial: SubredditStateType.Waiting,
     context: {},
     states: {
-      [SubredditStateType.Ready]: {
+      [SubredditStateType.Waiting]: {
         on: {
-          [SubredditEventType.Request]: SubredditStateType.Loading
+          [SubredditEventType.Request]: SubredditStateType.Loading,
         }
       },
       [SubredditStateType.Loading]: {
@@ -45,17 +36,21 @@ export default Machine<SubredditContext, SubredditState, SubredditEvent>(
               .then((res) => res.json()),
           onDone: {
             target: SubredditStateType.Done,
-            actions: ['setSubreddit']
+            actions: ['setSubreddit'],
+          },
+          onError: {
+            target: SubredditStateType.Done,
+            actions: ['setError'],
           }
         }
       },
-      [SubredditStateType.Done]: {}
+      [SubredditStateType.Done]: {},
     },
   },
   {
     actions: {
       setSubreddit: assign<SubredditContext, SubredditEvent>({
-        subreddit: (context, event) => event.data
+        subreddit: (_, event) => event.data
       })
     }
   },
