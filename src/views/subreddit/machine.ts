@@ -7,13 +7,9 @@ export enum SubredditEventType {
   Error = 'Error'
 }
 
-export interface SubredditEventObject extends EventObject {
+export interface SubredditEvent extends EventObject, DoneInvokeEvent<Subreddit> {
   type: SubredditEventType,
-  name?: string;
-  subreddit?: Subreddit;
 }
-
-export type SubredditEvent = SubredditEventObject & Partial<DoneInvokeEvent<Subreddit>>;
 
 export enum SubredditStateType {
   Ready = 'Ready',
